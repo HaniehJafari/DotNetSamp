@@ -83,3 +83,45 @@ app.MapGet("/secure-data", [Authorize] (ClaimsPrincipal user) =>
 app.Run();
 
 record UserCredential(int UserId,string Username, string Password);
+
+
+
+////Role
+app.MapDelete("/api/products/{id}", (int id) =>
+{
+    return Results.Ok($"Product {id} Deleted");
+})
+.RequireAuthorization(policy =>
+    policy.RequireRole("Admin"));
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy =>
+    {
+        policy.RequireRole("Admin");
+    });
+});
+
+
+
+//policy
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("ManageOrders", policy =>
+    {
+        policy.RequireClaim(
+            "permission",
+            "orders.manage");
+    });
+});
+app.MapGet("/api/orders", () =>
+{
+    return Results.Ok("Orders List");
+})
+.RequireAuthorization("ManageOrders");
+
+app.MapPost("/api/auth/login", () =>
+{
+    return Results.Ok("Login");
+})
+.AllowAnonymous();
